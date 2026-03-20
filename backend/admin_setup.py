@@ -109,6 +109,15 @@ def setup_database():
             );
         """)
 
+        cursor.execute("""
+            CREATE TABLE admin_sessions (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(255) UNIQUE NOT NULL,
+                admin_id INTEGER REFERENCES admin_users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
         # 5. INJECT DEFAULT ADMIN ACCOUNT
         print("👤 Creating default admin account...")
         admin_password_hash = generate_password_hash("admin") # Default password is 'admin'
