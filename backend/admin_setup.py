@@ -1,10 +1,10 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
 
 load_dotenv()
 db_password = os.getenv("DB_PASSWORD")
-# UPDATE YOUR PASSWORD HERE
 db_connection_string = f"dbname=mystore user=postgres password={db_password}"
 
 def setup_database():
@@ -12,13 +12,47 @@ def setup_database():
         connection = psycopg2.connect(db_connection_string)
         cursor = connection.cursor()
         
-        print("🧹 Wiping old product data...")
-        # 1. DROP OLD TABLES (Clean slate!)
+        print("🧹 Wiping old database tables (if they exist)...")
+        # 1. DROP ALL TABLES (CASCADE ensures dependent tables are safely dropped)
+        cursor.execute("DROP TABLE IF EXISTS activity_log CASCADE;")
+        cursor.execute("DROP TABLE IF EXISTS wishlist CASCADE;")
         cursor.execute("DROP TABLE IF EXISTS reviews CASCADE;")
         cursor.execute("DROP TABLE IF EXISTS orders CASCADE;")
+        cursor.execute("DROP TABLE IF EXISTS sessions CASCADE;")
         cursor.execute("DROP TABLE IF EXISTS products CASCADE;")
+        cursor.execute("DROP TABLE IF EXISTS admin_users CASCADE;")
+        cursor.execute("DROP TABLE IF EXISTS users CASCADE;")
 
-        # 2. RECREATE PRODUCTS (Now with Author, Synopsis, ISBN, Year!)
+        print("🏗️ Creating fresh tables...")
+
+        # 2. CREATE CORE USERS TABLES
+        cursor.execute("""
+            CREATE TABLE users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                profile_pic VARCHAR(255)
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE admin_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE sessions (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(255) UNIQUE NOT NULL,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # 3. CREATE STORE INVENTORY TABLES
         cursor.execute("""
             CREATE TABLE products (
                 id SERIAL PRIMARY KEY,
@@ -33,7 +67,7 @@ def setup_database():
             );
         """)
 
-        # 3. RECREATE ORDERS
+        # 4. CREATE TRANSACTION & INTERACTION TABLES
         cursor.execute("""
             CREATE TABLE orders (
                 id SERIAL PRIMARY KEY,
@@ -43,7 +77,6 @@ def setup_database():
             );
         """)
         
-        # 4. RECREATE REVIEWS
         cursor.execute("""
             CREATE TABLE reviews (
                 id SERIAL PRIMARY KEY,
@@ -56,8 +89,37 @@ def setup_database():
             );
         """)
 
+        cursor.execute("""
+            CREATE TABLE wishlist (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, product_id)
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE activity_log (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                action VARCHAR(100) NOT NULL,
+                details JSONB,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # 5. INJECT DEFAULT ADMIN ACCOUNT
+        print("👤 Creating default admin account...")
+        admin_password_hash = generate_password_hash("admin") # Default password is 'admin'
+        cursor.execute(
+            "INSERT INTO admin_users (username, password_hash) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            ('admin', admin_password_hash)
+        )
+
         connection.commit()
-        print("✅ New Schema Applied: Products, Orders, and Reviews are ready!")
+        print("✅ Database setup complete! All tables are ready.")
+        print("👉 Next step: Run 'python seeder.py' to populate the store with books.")
         
     except Exception as error:
         print("❌ Error setting up database:", error)
