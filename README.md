@@ -1,80 +1,56 @@
-# 📚 MyStore E-Commerce Platform
+# 📚 MyStore E-Commerce & Telemetry Platform
 
-A fully functional, full-stack e-commerce application built from scratch. This project demonstrates a complete user journey from browsing products and adding them to a wishlist, to secure authentication, cart management, and a simulated checkout process. 
+A full-stack, distributed e-commerce application demonstrating modern web architecture. This project features a robust relational database, secure authentication, an admin analytics dashboard, and a decoupled microservices architecture utilizing a high-throughput data ingestion pipeline.
 
-It features a robust relational database schema with a Python/Flask API handling the backend logic, and a dynamic, vanilla JavaScript frontend.
+## ✨ Key Features
 
-## ✨ Features
+**System Architecture & Engineering:**
+* ⚙️ **Microservices Design:** Core e-commerce logic runs on a Python/Flask backend, while high-volume user telemetry is offloaded to a lightning-fast Go microservice.
+* 🗄️ **Relational Data Modeling:** A strictly structured PostgreSQL database with complex table relationships (Users, Admin, Products, Orders, Reviews, Wishlists, Sessions, and Activity Logs).
+* 🔄 **Automated Seeding & Teardown:** Custom Python scripts to completely wipe, rebuild, and seed the database with thousands of mock records instantly.
 
-**For Users:**
-* 🔐 **Secure Authentication:** User registration and login with hashed passwords and session tokens.
-* 🛒 **Shopping Cart & Checkout:** Add items to the cart and process orders through a beautifully simulated MockStripe payment gateway.
-* ❤️ **Wishlists:** Save books for later with optimistic UI updates and animated toggles.
-* ⭐ **Reviews & Ratings:** Leave text reviews and dynamic star ratings on individual book pages.
-* 🖼️ **Profile Management:** View purchase history, manage the wishlist, and upload custom profile pictures (with an integrated cropping tool).
-* 🔍 **Smart Browsing:** Search bar, category filters, and pagination for smooth navigation.
+**Admin Dashboard:**
+* 📊 **Live Analytics:** Visualizes real-time revenue, order volume, and category distribution using Chart.js.
+* 📦 **Inline Inventory Management:** A seamless, single-page interface to add, update, and delete products without page reloads or modal popups.
+* 🔒 **Role-Based Access Control:** Completely segregated Admin authentication and secure session tokens.
 
-**For Admins:**
-* 📊 **Inventory Management:** A dedicated Admin Dashboard to add, update, and delete books dynamically.
-* 🗄️ **Data Seeding:** A custom Python script using `Faker` to instantly generate and insert 1,000 realistic books into the database.
-* 📡 **Telemetry & Activity Logging:** Tracks user clicks, cart additions, and profile views for future analytics.
+**User Experience:**
+* 🛒 **Storefront & Checkout:** Dynamic product fetching, real-time filtering, pagination, and a simulated Stripe checkout experience.
+* ❤️ **Wishlists & Reviews:** Optimistic UI updates for saving books and leaving star ratings.
+* 🖼️ **Profile Management:** Users can view their order history and upload custom avatars directly to the server.
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Fetch API, DOM Manipulation)
-* **Backend:** Python, Flask, Flask-CORS, Werkzeug (Security)
-* **Database:** PostgreSQL (`psycopg2` adapter)
-* **Tools:** `python-dotenv` (Environment variables), `Faker` (Mock data generation), `Cropper.js` (Image cropping)
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Fetch API, DOM Manipulation, CSS Grid)
+* **Core API (Backend):** Python, Flask, Flask-CORS, Werkzeug
+* **Telemetry Microservice:** Go (Golang), Goroutines (Asynchronous logging)
+* **Database:** PostgreSQL (`psycopg2` and `lib/pq` drivers)
+* **Tools:** Chart.js, Faker, dotenv
 
-## 🚀 Getting Started
+## 📂 Project Structure
 
-Follow these instructions to run the project on your local machine.
-
-### 1. Prerequisites
-* Python 3.x installed
-* PostgreSQL installed and running on your machine
-
-### 2. Database Setup
-Create a new PostgreSQL database for the project:
-```sql
-CREATE DATABASE mystore;
-
-cd backend
-python -m venv .venv
-
-# Activate the virtual environment
-# On Windows:
-.\.venv\Scripts\activate
-# On Mac/Linux:
-source .venv/bin/activate
-
-# Install dependencies
-pip install flask flask-cors psycopg2 werkzeug faker python-dotenv
-
-DB_PASSWORD=your_actual_postgres_password_here
-
-python admin_setup.py
-python seeder.py
-python app.py
-
-
+```text
 Ecomdemo/
-├── backend/
-│   ├── app.py              # Main Flask API and routes
-│   ├── admin_setup.py      # Database schema creation
-│   ├── seeder.py           # Generates 1000 mock books
-│   ├── .env                # Secure environment variables (ignored by git)
-│   └── uploads/            # Stores user profile pictures
-└── frontend/
-    ├── index.html          # Main storefront
-    ├── book.html           # Dedicated product details and reviews
-    ├── profile.html        # User dashboard, orders, and wishlist
-    ├── bestsellers.html    # Top 5 trending books
-    ├── admin.html          # Inventory management
+├── backend/                 # Main E-Commerce API (Port 5000)
+│   ├── app.py               # Core Flask routes & checkout logic
+│   ├── admin_setup.py       # Complete database schema builder
+│   ├── seeder.py            # Generates 1,000+ mock books & users
+│   ├── .env                 # Database credentials
+│   └── uploads/             # Stores user profile pictures
+├── telemetry-service/       # High-throughput Logging Microservice (Port 8080)
+│   ├── main.go              # Go server utilizing background goroutines
+│   ├── go.mod / go.sum      # Go dependencies
+│   └── .env                 # Database credentials
+└── frontend/                # Vanilla JS Web Application
+    ├── index.html           # Main storefront
+    ├── book.html            # Dedicated product details & reviews
+    ├── profile.html         # User dashboard & order history
+    ├── bestsellers.html     # Trending analytics view
+    ├── admin.html           # Secure executive dashboard
     ├── css/
-    │   └── style.css       # Global styles and UI components
-    └── js/
-        ├── storefront.js   # Main store logic, cart, and checkout
-        ├── book.js         # Single book page logic
-        ├── profile.js      # User profile and image upload logic
-        └── telemetry.js    # User activity tracking
+    │   └── style.css        # Global styles
+    ├── js/
+    │   ├── storefront.js    # Core UI, cart, and auth logic
+    │   ├── admin.js         # Chart rendering and inventory control
+    │   └── telemetry.js     # Silent asynchronous event tracker
+    └── images/              # Static assets and favicons
