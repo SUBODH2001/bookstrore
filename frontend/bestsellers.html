@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 5 Best Sellers - MyStore</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo">📚 MyStore</a>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="bestsellers.html" style="font-weight: bold; color: #ffd814;">Best Sellers</a>
+                <a href="admin.html">Admin</a>
+            </nav>
+        </div>
+        
+        <div class="user-controls" id="userArea">
+            <input type="text" id="usernameInput" placeholder="Username">
+            <input type="password" id="passwordInput" placeholder="Password">
+            <button class="auth-btn" onclick="login()">Login</button>
+            <button class="auth-btn" style="background: #eee;" onclick="register()">Register</button>
+            <button class="cart-btn" onclick="toggleCart()">🛒 Cart (<span id="cartCount">0</span>)</button>
+        </div>
+    </header>
+
+    <main class="store-container" style="min-height: 70vh;">
+        <h2 class="section-title" style="text-align: center; font-size: 2.5rem; margin-top: 40px;">🏆 Top 5 Best Sellers</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 40px;">The most popular reads in our store, updated in real-time.</p>
+        
+        <div id="trending-front" class="book-grid"></div>
+    </main>
+
+    <div class="cart-overlay" id="cartOverlay">
+        <div class="cart-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Your Shopping Cart</h2>
+                <button onclick="toggleCart()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">❌</button>
+            </div>
+            <div id="cartItemsList"></div>
+            <div class="cart-total">Total: $<span id="cartTotal">0.00</span></div>
+            <div id="cartMessage" style="text-align: center; font-weight: bold; margin-top: 15px;"></div>
+            <button class="buy-btn" onclick="checkout()" style="margin-top: 15px;">Secure Checkout</button>
+            <button onclick="clearCart()" style="width: 100%; margin-top: 10px; padding: 10px; background: transparent; border: 1px solid #ccc; cursor: pointer; border-radius: 20px;">Empty Cart</button>
+        </div>
+    </div> 
+
+    <div class="payment-modal-overlay" id="paymentOverlay">
+        <div class="payment-box">
+            <h2>💳 Secure Checkout</h2>
+            <p style="color: #666; margin-bottom: 20px; font-weight: bold;">Amount due: $<span id="paymentTotal">0.00</span></p>
+            <label style="font-size: 0.85rem; color: #555;">Cardholder Name</label>
+            <input type="text" id="cardName" class="payment-input" placeholder="Jane Doe" required>
+            <label style="font-size: 0.85rem; color: #555;">Card Number</label>
+            <input type="text" id="cardNumber" class="payment-input" placeholder="0000 0000 0000 0000" maxlength="19" onkeyup="formatCardNumber(this)" required>
+            <div class="payment-row">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85rem; color: #555;">Expiry (MM/YY)</label>
+                    <input type="text" id="cardExpiry" class="payment-input" placeholder="12/26" maxlength="5" required>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85rem; color: #555;">CVC</label>
+                    <input type="password" id="cardCVC" class="payment-input" placeholder="123" maxlength="3" required>
+                </div>
+            </div>
+            <button class="payment-btn" id="payButton" onclick="processPayment()">Pay $<span id="btnPaymentTotal">0.00</span></button>
+            <button onclick="closePaymentModal()" style="width: 100%; margin-top: 10px; padding: 10px; background: transparent; border: none; cursor: pointer; color: #888; text-decoration: underline;">Cancel and return to cart</button>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <footer>
+        <h3>MyStore E-Commerce</h3>
+        <p>Providing the best books since 2026.</p>
+    </footer>
+
+    <script src="js/telemetry.js"></script>
+    <script src="js/storefront.js"></script>
+</body>
+</html>

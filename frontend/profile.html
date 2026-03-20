@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - MyStore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <style>
+        /* Container styling */
+        .profile-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Profile Header Centering */
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+        }
+
+        .avatar-container { position: relative; width: 120px; height: 120px; }
+        
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            object-fit: cover;
+        }
+
+        /* Modal for Cropping */
+        .crop-modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+            justify-content: center; align-items: center;
+        }
+        .crop-box { background: white; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; }
+        .crop-container { max-height: 400px; margin-bottom: 20px; overflow: hidden; }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #333; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
+        tr:hover { background-color: #fdfdfd; }
+    </style>
+</head>
+<body style="background-color: #f4f7f6;">
+
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo">📚 MyStore</a>
+            <nav class="nav-links">
+                <a href="index.html">Back to Store</a>
+            </nav>
+        </div>
+        <div class="user-controls">
+            <button class="auth-btn" style="background: #eee;" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img id="profileImage" src="https://via.placeholder.com/120" alt="Profile" class="avatar">
+                <button onclick="document.getElementById('fileInput').click()" 
+                        style="position: absolute; bottom: 5px; right: 5px; background: #232f3e; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    📷
+                </button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="prepareCrop(event)">
+            
+            <div>
+                <h1 style="margin: 0; color: #232f3e;">Welcome, <span id="profileName">Reader</span>!</h1>
+                <p style="color: #666; margin-top: 5px;">Member since 2026</p>
+            </div>
+        </div>
+
+        <h2 style="color: #232f3e; margin-bottom: 10px;">📦 My Purchase History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Book Title</th>
+                    <th>Price</th>
+                    <th>Purchase Date</th>
+                </tr>
+            </thead>
+            <tbody id="myOrdersTableBody">
+                </tbody>
+        </table>
+        <h2 style="color: #232f3e; margin-top: 50px; margin-bottom: 10px;">❤️ My Wishlist</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="myWishlistTableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="cropModal" class="crop-modal">
+        <div class="crop-box">
+            <h3 style="margin-top: 0;">Crop Your Profile Photo</h3>
+            <div class="crop-container">
+                <img id="imageToCrop" style="max-width: 100%;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="buy-btn" style="flex: 1;" onclick="executeCrop()">Save & Upload</button>
+                <button class="rate-btn" style="flex: 1;" onclick="closeCropModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/telemetry.js"></script>
+</body>
+</html>

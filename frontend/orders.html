@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Order History</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .orders-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            color: #232f3e;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            overflow-x: auto; /* Makes it scrollable on mobile */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover { background-color: #fdfdfd; }
+
+        .price-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .user-badge {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body style="background-color: #f4f7f6;">
+
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo">📚 MyStore</a>
+            <nav class="nav-links">
+                <a href="index.html">Storefront</a>
+                <a href="admin.html">Inventory Admin</a>
+                <a href="orders.html" style="color: #ffd814;">Order History</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="orders-container">
+        <div class="header">
+            <h1>📦 Master Order History</h1>
+            <button onclick="fetchOrders()" style="padding: 10px 15px; background: #232f3e; color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh Data 🔄</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        <th>Book Purchased</th>
+                        <th>Amount Paid</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr><td colspan="5" style="text-align:center; padding: 30px;">Loading order history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/orders.js"></script>
+</body>
+</html>

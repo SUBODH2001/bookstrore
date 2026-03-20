@@ -1,0 +1,417 @@
+/* --- GLOBAL STYLES --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Keeps footer at the bottom */
+}
+
+/* --- NAVBAR (Red & White Zones) --- */
+header {
+    background-color: #232f3e;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    flex-wrap: wrap; /* Allows the right side to drop down if needed */
+    gap: 15px; 
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap; /* Allows links to wrap below logo if squished */
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd814;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-links a:hover {
+    color: #ffd814;
+}
+
+/* User Login Area */
+.user-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap; /* Let inputs drop down if squished */
+}
+
+.user-controls input {
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    max-width: 120px; /* Keeps inputs from being too long on mobile */
+}
+
+.auth-btn {
+    background-color: #ffd814;
+    color: #111;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.auth-btn:hover { background-color: #f7ca00; }
+
+/* --- MOBILE RESPONSIVENESS (The Magic Trick!) --- */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column; /* Stacks the left and right sides on top of each other */
+        align-items: flex-start;
+        padding: 15px;
+    }
+    
+    .header-left {
+        gap: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-controls {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+/* --- PRODUCT CAROUSEL (Cyan Zone) --- */
+.store-container {
+    padding: 40px 5%; /* 5% margin on the sides keeps it looking neat */
+    flex: 1; 
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 90%;
+}
+
+.section-title {
+    color: #232f3e;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+/* This replaces the horizontal scroll with a clean, wrapping grid */
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 50px;
+}
+
+.book-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column; /* Pushes the buy button to the bottom */
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.price { font-size: 1.4rem; color: #B12704; font-weight: bold; margin: 10px 0; }
+.stock { color: #007600; font-size: 0.9rem; margin-bottom: auto; /* Pushes button down */ }
+.stock.low { color: #c40000; }
+
+.buy-btn, .rate-btn {
+    height: 42px; /* Force identical height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box; /* Crucial: includes border in the height calculation */
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 25px; 
+    padding: 0 15px; /* Side padding only, height is fixed */
+}
+ 
+
+.buy-btn {
+    background-color: #ffd814;
+    color: #111;
+    border: none;
+    font-weight: bold;
+    flex: 2;
+}
+
+.buy-btn:hover {
+    background-color: #f7ca00;
+}
+
+/* Custom Scrollbar for Carousel */
+#store-front::-webkit-scrollbar { height: 10px; }
+#store-front::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
+#store-front::-webkit-scrollbar-track { background: #f1f1f1; }
+
+.book-card {
+    min-width: 250px; /* Forces cards to stay wide in the carousel */
+    scroll-snap-align: start;
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    border: 1px solid #eee;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.price { font-size: 1.4rem; color: #B12704; font-weight: bold; margin: 10px 0; }
+.stock { color: #007600; font-size: 0.9rem; margin-bottom: 20px; }
+.stock.low { color: #c40000; }
+
+.buy-btn {
+    background-color: #ffd814; color: #111; border: 1px solid #fcd200;
+    padding: 12px 20px; border-radius: 20px; cursor: pointer;
+    font-weight: bold; width: 100%; transition: background-color 0.2s;
+}
+.buy-btn:hover { background-color: #f7ca00; }
+
+/* --- FOOTER (Brown Zone) --- */
+footer {
+    background-color: #131a22;
+    color: #ddd;
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: auto;
+}
+
+.footer-links { margin-top: 15px; }
+.footer-links a { color: #fff; text-decoration: none; margin: 0 10px; font-size: 0.9rem; }
+.footer-links a:hover { text-decoration: underline; }
+
+/* --- SHOPPING CART MODAL --- */
+.cart-btn {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 15px;
+}
+.cart-btn:hover { background-color: rgba(255,255,255,0.1); }
+
+.cart-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.cart-modal {
+    background: white;
+    width: 400px;
+    max-width: 90%;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    color: #333;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+}
+
+.cart-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 15px;
+}
+
+/* --- TOAST NOTIFICATIONS --- */
+#toast {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px; /* Centers it */
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 16px;
+    position: fixed;
+    z-index: 2000;
+    left: 50%;
+    bottom: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s, visibility 0.5s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px; /* Slides up slightly */
+}
+
+#toast.error { background-color: #d9534f; color: white; }
+#toast.success { background-color: #5cb85c; color: white; }
+
+/* --- SEARCH BAR --- */
+.search-input {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 25px;
+    width: 300px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-input:focus {
+    border-color: #ffd814;
+    box-shadow: 0 0 8px rgba(255, 216, 20, 0.5);
+}
+
+/* --- CATEGORY PILLS --- */
+.category-menu {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 0 20px 0;
+}
+.category-menu::-webkit-scrollbar { display: none; } /* Hide scrollbar for cleaner look */
+
+.cat-btn {
+    background: white; border: 1px solid #ccc; padding: 8px 16px;
+    border-radius: 20px; cursor: pointer; font-weight: bold; white-space: nowrap;
+    transition: all 0.2s;
+}
+.cat-btn:hover { background: #eee; }
+.cat-btn.active { background: #232f3e; color: white; border-color: #232f3e; }
+
+.book-category-tag {
+    font-size: 0.8rem; background: #eee; padding: 3px 8px; 
+    border-radius: 10px; color: #555; display: inline-block; margin-bottom: 10px;
+}
+
+/* --- RATE BUTTON --- */
+.rate-btn {
+    background-color: transparent;
+    color: #555;
+    border: none; /* Removed the 2px solid border! */
+    font-weight: bold;
+    flex: 1;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.rate-btn:hover {
+    border-color: #dcb700;
+    background-color: #fff9e6;
+}
+
+
+/* --- MOCK PAYMENT GATEWAY --- */
+.payment-modal-overlay {
+    display: none; position: fixed; z-index: 2000; left: 0; top: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.7);
+    justify-content: center; align-items: center;
+}
+
+.payment-box {
+    background: white; padding: 30px; border-radius: 12px;
+    width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.payment-box h2 { margin-top: 0; color: #1a1f36; }
+
+.payment-input {
+    width: 100%; padding: 12px; margin: 8px 0 15px;
+    border: 1px solid #e6e6e6; border-radius: 6px; box-sizing: border-box;
+    font-family: monospace; font-size: 1rem;
+    transition: border 0.3s;
+}
+
+.payment-input:focus { border-color: #0070ba; outline: none; }
+
+.payment-row { display: flex; gap: 15px; }
+
+.payment-btn {
+    width: 100%; padding: 15px; background: #0070ba; color: white;
+    border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold;
+    cursor: pointer; margin-top: 10px; transition: background 0.3s;
+}
+
+.payment-btn:hover { background: #005ea6; }
+.payment-btn:disabled { background: #999; cursor: not-allowed; }
+
+.secure-badge { 
+    text-align: center; color: #888; font-size: 0.85rem; 
+    margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; 
+}
+
+/* --- WISHLIST HEART BUTTON --- */
+.wishlist-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem; /* Make the emoji bigger */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    outline: none;
+}
+
+.wishlist-btn:hover {
+    transform: scale(1.15); /* Subtle grow when hovering */
+}
+
+/* The pop animation class we will trigger with JS */
+.wishlist-btn.animating {
+    animation: popHeart 0.3s ease-in-out;
+}
+
+@keyframes popHeart {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}

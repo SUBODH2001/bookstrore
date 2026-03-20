@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6; 
+            color: #333;
+            margin: 0; padding: 20px;
+        }
+        .header { text-align: center; margin-bottom: 30px; color: #232f3e; }
+        
+        .dashboard-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        /* Left Side: The Form */
+        .admin-panel {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 300px; flex-shrink: 0;
+            position: sticky; top: 20px;
+        }
+        
+        input, select {
+            width: 100%; padding: 10px; margin: 8px 0 15px 0;
+            border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+        }
+        
+        .submit-btn {
+            background-color: #007BFF; color: white; border: none;
+            padding: 12px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer;
+        }
+        .submit-btn.update-mode { background-color: #28a745; }
+        
+        #statusMessage { text-align: center; font-weight: bold; min-height: 20px; margin-bottom: 15px; }
+
+        /* Right Side: The Inventory Table */
+        .inventory-section {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-grow: 1; overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #232f3e; color: white; }
+        
+        .action-btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold;}
+        .edit-btn { background-color: #ffc107; color: #111; margin-right: 5px; }
+        .del-btn { background-color: #dc3545; }
+
+        @media (max-width: 800px) {
+            .dashboard-container {
+                flex-direction: column; 
+                align-items: stretch; 
+            }
+
+            .admin-panel {
+                width: auto; 
+                position: static; 
+                margin-bottom: 20px;
+            }
+
+            .inventory-section {
+                width: auto;
+                box-sizing: border-box; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="header">🔒 Admin Control Center</h1>
+
+    <div class="dashboard-container">
+        
+        <div class="admin-panel">
+            <h2 id="formTitle">Add New Book</h2>
+            <div id="statusMessage"></div>
+            
+            <label>Admin Password Required:</label>
+            <input type="password" id="adminPassword" placeholder="Enter secret password">
+            <hr>
+            
+            <label>Book Name:</label>
+            <input type="text" id="bookName">
+            
+            <label>Price ($):</label>
+            <input type="number" id="bookPrice" step="0.01">
+            
+            <label>Category:</label>
+            <select id="bookCategory">
+                <option value="Uncategorized">Select a Category...</option>
+                <option value="Fiction">Fiction</option><option value="Non-Fiction">Non-Fiction</option><option value="Sci-Fi">Sci-Fi</option><option value="Fantasy">Fantasy</option><option value="Mystery">Mystery</option><option value="Thriller">Thriller</option><option value="Romance">Romance</option><option value="Horror">Horror</option><option value="Biography">Biography</option><option value="History">History</option><option value="Science">Science</option><option value="Technology">Technology</option><option value="Programming">Programming</option><option value="Design">Design</option><option value="Business">Business</option><option value="Finance">Finance</option><option value="Self-Help">Self-Help</option><option value="Health">Health</option><option value="Cooking">Cooking</option><option value="Art">Art</option><option value="Travel">Travel</option><option value="Poetry">Poetry</option><option value="Religion">Religion</option><option value="Philosophy">Philosophy</option><option value="Psychology">Psychology</option><option value="Education">Education</option><option value="Childrens">Children's</option><option value="Young Adult">Young Adult</option><option value="Comics">Comics</option><option value="Graphic Novels">Graphic Novels</option><option value="Manga">Manga</option><option value="Classic Literature">Classic Literature</option><option value="True Crime">True Crime</option><option value="Humor">Humor</option><option value="Sports">Sports</option><option value="Music">Music</option><option value="Photography">Photography</option><option value="Architecture">Architecture</option><option value="Crafts">Crafts</option><option value="Gardening">Gardening</option><option value="Pets">Pets</option><option value="Nature">Nature</option><option value="Mathematics">Mathematics</option><option value="Medicine">Medicine</option><option value="Law">Law</option><option value="Politics">Politics</option><option value="Sociology">Sociology</option><option value="Anthropology">Anthropology</option><option value="Reference">Reference</option><option value="Dictionaries">Dictionaries</option>
+            </select>
+
+            <label>Stock:</label>
+            <input type="number" id="bookStock">
+            
+            <input type="hidden" id="editBookId" value="">
+            
+            <button class="submit-btn" id="submitBtn" onclick="saveBook()">Add to Database</button>
+            <button class="submit-btn" id="cancelBtn" onclick="cancelEdit()" style="background: #6c757d; margin-top: 10px; display: none;">Cancel Edit</button>
+            <p style="text-align:center; margin-top:15px;"><a href="index.html">← Back to Store</a></p>
+        </div>
+
+        <div class="inventory-section">
+            <h2>Current Inventory</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Book Name</th>
+                        <th>Category</th> 
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <tr><td colspan="6">Loading inventory...</td></tr> 
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
