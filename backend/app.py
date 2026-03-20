@@ -657,5 +657,68 @@ def get_my_wishlist():
     finally:
         if 'connection' in locals(): connection.close()
 
+# --- NEW: Admin Analytics Dashboard Data ---
+@app.route('/api/analytics', methods=['GET'])
+def get_analytics():
+    token = request.headers.get('Authorization')
+    
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        
+        # 1. Verify Admin (Basic check for this example)
+        cursor.execute("SELECT user_id FROM sessions WHERE token = %s", (token,))
+        if not cursor.fetchone(): 
+            return jsonify({"message": "Unauthorized"}), 401
+
+        # 2. Get Summary Stats
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_orders = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_users = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(p.price), 0) 
+            FROM orders o 
+            JOIN products p ON o.product_id = p.id
+        """)
+        total_revenue = cursor.fetchone()[0]
+
+        # 3. Get Top 5 Books (For Bar Chart)
+        cursor.execute("""
+            SELECT p.name, COUNT(o.id) as sales
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            GROUP BY p.name
+            ORDER BY sales DESC
+            LIMIT 5
+        """)
+        top_books = [{"name": row[0], "sales": row[1]} for row in cursor.fetchall()]
+
+        # 4. Get Sales by Category (For Doughnut Chart)
+        cursor.execute("""
+            SELECT p.category, COUNT(o.id) as sales
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            GROUP BY p.category
+            HAVING COUNT(o.id) > 0
+        """)
+        category_sales = [{"category": row[0], "sales": row[1]} for row in cursor.fetchall()]
+
+        return jsonify({
+            "total_orders": total_orders,
+            "total_users": total_users,
+            "total_revenue": float(total_revenue),
+            "top_books": top_books,
+            "category_sales": category_sales
+        }), 200
+
+    except Exception as error:
+        print("Analytics Error:", error)
+        return jsonify({"message": "Server error fetching analytics."}), 500
+    finally:
+        if 'connection' in locals(): connection.close()
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

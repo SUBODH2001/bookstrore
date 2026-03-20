@@ -2,135 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MyStore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6; 
-            color: #333;
-            margin: 0; padding: 20px;
-        }
-        .header { text-align: center; margin-bottom: 30px; color: #232f3e; }
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
         
-        .dashboard-container {
-            display: flex;
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-            align-items: flex-start;
-        }
-
-        /* Left Side: The Form */
-        .admin-panel {
-            background: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 300px; flex-shrink: 0;
-            position: sticky; top: 20px;
-        }
+        /* Summary Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #0070ba; }
+        .stat-card h3 { margin: 0; color: #666; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card .value { font-size: 2.5rem; font-weight: bold; color: #111; margin: 10px 0 0 0; }
         
-        input, select {
-            width: 100%; padding: 10px; margin: 8px 0 15px 0;
-            border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
-        }
+        /* Charts Area */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 40px; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        .submit-btn {
-            background-color: #007BFF; color: white; border: none;
-            padding: 12px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer;
-        }
-        .submit-btn.update-mode { background-color: #28a745; }
-        
-        #statusMessage { text-align: center; font-weight: bold; min-height: 20px; margin-bottom: 15px; }
-
-        /* Right Side: The Inventory Table */
-        .inventory-section {
-            background: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            flex-grow: 1; overflow-x: auto;
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #232f3e; color: white; }
-        
-        .action-btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold;}
-        .edit-btn { background-color: #ffc107; color: #111; margin-right: 5px; }
-        .del-btn { background-color: #dc3545; }
-
-        @media (max-width: 800px) {
-            .dashboard-container {
-                flex-direction: column; 
-                align-items: stretch; 
-            }
-
-            .admin-panel {
-                width: auto; 
-                position: static; 
-                margin-bottom: 20px;
-            }
-
-            .inventory-section {
-                width: auto;
-                box-sizing: border-box; 
-            }
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body>
+<body style="background-color: #f4f7f6;">
 
-    <h1 class="header">🔒 Admin Control Center</h1>
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo">📚 MyStore Admin</a>
+            <nav class="nav-links">
+                <a href="index.html">← Back to Store</a>
+            </nav>
+        </div>
+    </header>
 
-    <div class="dashboard-container">
-        
-        <div class="admin-panel">
-            <h2 id="formTitle">Add New Book</h2>
-            <div id="statusMessage"></div>
-            
-            <label>Admin Password Required:</label>
-            <input type="password" id="adminPassword" placeholder="Enter secret password">
-            <hr>
-            
-            <label>Book Name:</label>
-            <input type="text" id="bookName">
-            
-            <label>Price ($):</label>
-            <input type="number" id="bookPrice" step="0.01">
-            
-            <label>Category:</label>
-            <select id="bookCategory">
-                <option value="Uncategorized">Select a Category...</option>
-                <option value="Fiction">Fiction</option><option value="Non-Fiction">Non-Fiction</option><option value="Sci-Fi">Sci-Fi</option><option value="Fantasy">Fantasy</option><option value="Mystery">Mystery</option><option value="Thriller">Thriller</option><option value="Romance">Romance</option><option value="Horror">Horror</option><option value="Biography">Biography</option><option value="History">History</option><option value="Science">Science</option><option value="Technology">Technology</option><option value="Programming">Programming</option><option value="Design">Design</option><option value="Business">Business</option><option value="Finance">Finance</option><option value="Self-Help">Self-Help</option><option value="Health">Health</option><option value="Cooking">Cooking</option><option value="Art">Art</option><option value="Travel">Travel</option><option value="Poetry">Poetry</option><option value="Religion">Religion</option><option value="Philosophy">Philosophy</option><option value="Psychology">Psychology</option><option value="Education">Education</option><option value="Childrens">Children's</option><option value="Young Adult">Young Adult</option><option value="Comics">Comics</option><option value="Graphic Novels">Graphic Novels</option><option value="Manga">Manga</option><option value="Classic Literature">Classic Literature</option><option value="True Crime">True Crime</option><option value="Humor">Humor</option><option value="Sports">Sports</option><option value="Music">Music</option><option value="Photography">Photography</option><option value="Architecture">Architecture</option><option value="Crafts">Crafts</option><option value="Gardening">Gardening</option><option value="Pets">Pets</option><option value="Nature">Nature</option><option value="Mathematics">Mathematics</option><option value="Medicine">Medicine</option><option value="Law">Law</option><option value="Politics">Politics</option><option value="Sociology">Sociology</option><option value="Anthropology">Anthropology</option><option value="Reference">Reference</option><option value="Dictionaries">Dictionaries</option>
-            </select>
+    <div class="admin-container">
+        <h1 style="color: #232f3e; margin-bottom: 30px;">📊 Executive Dashboard</h1>
 
-            <label>Stock:</label>
-            <input type="number" id="bookStock">
-            
-            <input type="hidden" id="editBookId" value="">
-            
-            <button class="submit-btn" id="submitBtn" onclick="saveBook()">Add to Database</button>
-            <button class="submit-btn" id="cancelBtn" onclick="cancelEdit()" style="background: #6c757d; margin-top: 10px; display: none;">Cancel Edit</button>
-            <p style="text-align:center; margin-top:15px;"><a href="index.html">← Back to Store</a></p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <p class="value" id="statRevenue">$0.00</p>
+            </div>
+            <div class="stat-card" style="border-left-color: #ffc107;">
+                <h3>Total Orders</h3>
+                <p class="value" id="statOrders">0</p>
+            </div>
+            <div class="stat-card" style="border-left-color: #28a745;">
+                <h3>Registered Users</h3>
+                <p class="value" id="statUsers">0</p>
+            </div>
         </div>
 
-        <div class="inventory-section">
-            <h2>Current Inventory</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Book Name</th>
-                        <th>Category</th> 
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="inventoryTableBody">
-                    <tr><td colspan="6">Loading inventory...</td></tr> 
-                </tbody>
-            </table>
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 style="margin-top: 0; color: #333;">Top 5 Selling Books</h3>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 style="margin-top: 0; color: #333;">Sales by Category</h3>
+                <canvas id="doughnutChart"></canvas>
+            </div>
         </div>
+
     </div>
 
-    <script src="js/admin.js"></script>
+    <script>
+        window.onload = function() {
+            const token = localStorage.getItem("session_token");
+            if (!token) {
+                alert("You must be logged in to view analytics.");
+                window.location.href = "index.html";
+                return;
+            }
+            fetchAnalytics(token);
+        };
+
+        function fetchAnalytics(token) {
+            fetch('http://127.0.0.1:5000/api/analytics', {
+                headers: { 'Authorization': token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Unauthorized");
+                return res.json();
+            })
+            .then(data => {
+                // 1. Populate KPI Cards
+                document.getElementById('statRevenue').innerText = '$' + data.total_revenue.toFixed(2);
+                document.getElementById('statOrders').innerText = data.total_orders;
+                document.getElementById('statUsers').innerText = data.total_users;
+
+                // 2. Render Bar Chart (Top Books)
+                const barCtx = document.getElementById('barChart').getContext('2d');
+                new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.top_books.map(b => b.name.substring(0, 20) + '...'), // Truncate long names
+                        datasets: [{
+                            label: 'Copies Sold',
+                            data: data.top_books.map(b => b.sales),
+                            backgroundColor: '#0070ba',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    }
+                });
+
+                // 3. Render Doughnut Chart (Categories)
+                const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+                new Chart(doughnutCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.category_sales.map(c => c.category),
+                        datasets: [{
+                            data: data.category_sales.map(c => c.sales),
+                            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.querySelector('.admin-container').innerHTML = "<h2 style='color:red;'>Access Denied. Please log in as an administrator.</h2>";
+            });
+        }
+    </script>
 </body>
 </html>
