@@ -1,20 +1,29 @@
-function recordAction(actionName, extraDetails = {}) {
+function recordAction(action, details = {}) {
     const token = localStorage.getItem("session_token");
-    if (!token) return; // Don't log if not logged in
+    
+    // If they aren't logged in, don't bother tracking for now
+    if (!token) return; 
 
-    fetch('http://127.0.0.1:5000/log-activity', {
+    const payload = { 
+        action: action, 
+        details: details 
+    };
+
+    // 🔥 POINTING STRICTLY TO THE GO MICROSERVICE ON PORT 8080
+    fetch('http://127.0.0.1:8080/log-activity', {
         method: 'POST',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
-            'Authorization': token 
+            'Authorization': token
         },
-        body: JSON.stringify({
-            action: actionName,
-            details: {
-                ...extraDetails,
-                url: window.location.pathname,
-                screen_size: `${window.innerWidth}x${window.innerHeight}`
-            }
-        })
-    }).catch(err => console.log("Telemetry failed, ignoring..."));
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Go server rejected the log");
+    })
+    .catch(err => {
+        // We log it quietly in the console, but we DO NOT alert the user.
+        // Telemetry should never ruin the user experience!
+        console.log("Telemetry beacon failed (silent fail).", err.message);
+    });
 }

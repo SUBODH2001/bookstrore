@@ -546,38 +546,7 @@ def submit_review():
     finally:
         if 'connection' in locals(): connection.close()
 
-
-@app.route('/log-activity', methods=['POST'])
-def log_activity():
-    token = request.headers.get('Authorization')
-    if not token: return jsonify({"message": "Ghost activity ignored"}), 200
-    
-    data = request.json
-    action = data.get('action')
-    details = data.get('details', {})
-
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        
-        cursor.execute("SELECT user_id FROM sessions WHERE token = %s", (token,))
-        user_session = cursor.fetchone()
-        
-        if user_session:
-            user_id = user_session[0]
-            cursor.execute(
-                "INSERT INTO activity_log (user_id, action, details) VALUES (%s, %s, %s)",
-                (user_id, action, json.dumps(details))
-            )
-            connection.commit()
-            
-        return jsonify({"status": "logged"}), 200
-    except Exception as e:
-        print(f"Logging error: {e}")
-        return jsonify({"status": "error"}), 500
-    finally:
-        if 'connection' in locals(): connection.close()    
-
+   
 # --- NEW: Toggle Wishlist (Add/Remove) ---
 @app.route('/wishlist/toggle', methods=['POST'])
 def toggle_wishlist():

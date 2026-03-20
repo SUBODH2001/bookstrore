@@ -116,6 +116,46 @@ header {
     object-position: center; /* Keeps the focal point in the middle */
     display: block;
     opacity: 0.8; /* Optional: slightly darkens the image so it fits the modern UI */
+    z-index: 1;
+}
+
+.landing-text {
+    position: absolute; /* REQUIRED: Force the text out of normal flow and over the image */
+    
+    /* Perfect vertical and horizontal centering trick */
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    
+    /* Ensure it's in front of the image */
+    z-index: 10; 
+    
+    /* Modern text styling */
+    color: white;
+    font-size: 4rem; /* user needs to choose size, e.g. 3rem or 4.5rem for bold headline */
+    font-weight: bold;
+    text-align: center; /* Center multi-line text */
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.7); /* Optional: extra readability on light image areas */
+    
+    /* --- ANIMATION CONTROLS --- */
+    opacity: 0; /* Page starts with the text invisible */
+    animation: fadeInUp 0.5s ease-out forwards; /* Name, duration, timing, stay at the end */
+    animation-delay: 0.1s; /* Tiny delay before starting feels more natural */
+}
+
+/* Define the 'fadeInUp' motion */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        /* Start 50px BELOW the perfectly centered position. 
+           We have to combine the existing '-50%' centering logic with the offset. */
+        transform: translate(-50%, calc(-50% + 50px));
+    }
+    100% {
+        opacity: 1;
+        /* End exactly at the perfectly centered position. */
+        transform: translate(-50%, -50%);
+    }
 }
 
 /* --- PRODUCT CAROUSEL (Cyan Zone) --- */
