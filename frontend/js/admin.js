@@ -1,151 +1,205 @@
-window.onload = loadInventory;
+// --- INITIALIZATION & AUTH ---
+window.onload = function() {
+    const adminToken = localStorage.getItem("admin_token");
+    if (adminToken) {
+        document.getElementById('adminLoginOverlay').style.display = 'none';
+        fetchAnalytics(adminToken);
+        fetchInventory();
+    } else {
+        document.getElementById('adminLoginOverlay').style.display = 'flex';
+    }
+};
 
-function loadInventory() {
-    const tbody = document.getElementById('inventoryTableBody');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Fetching data...</td></tr>';
-
-    fetch('http://127.0.0.1:5000/books')
-    .then(res => {
-        if (!res.ok) throw new Error("Server returned status " + res.status);
-        return res.json();
+function adminLogin() {
+    const u = document.getElementById('adminUsername').value;
+    const p = document.getElementById('adminPass').value;
+    
+    fetch('http://127.0.0.1:5000/admin-login', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: u, password: p})
     })
-    .then(books => {
-        tbody.innerHTML = ''; 
-        
-        if (!books || books.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No books found in the database. Use the form on the left to add one!</td></tr>';
-            return;
+    .then(res => res.json())
+    .then(data => {
+        if (data.token) {
+            localStorage.setItem("admin_token", data.token);
+            document.getElementById('adminLoginOverlay').style.display = 'none';
+            fetchAnalytics(data.token);
+            fetchInventory();
+            showToast("Welcome to the Admin Dashboard!", false);
+        } else {
+            showToast(data.message, true);
         }
-        
-        books.forEach(book => {
-            const safeName = book.name ? book.name.replace(/'/g, "\\'") : "Unknown Title";
-            const safePrice = book.price ? parseFloat(book.price).toFixed(2) : "0.00";
-            const safeStock = book.stock !== null ? book.stock : 0;
-            const safeCategory = book.category ? book.category.replace(/'/g, "\\'") : "Uncategorized";
+    })
+    .catch(err => showToast("Server error.", true));
+}
 
+// --- TAB SWITCHING (Bulletproof Version) ---
+function switchTab(tabId) {
+    // 1. Hide all tabs and remove 'active' styling from all buttons
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // 2. Show the selected tab
+    document.getElementById(tabId).classList.add('active');
+    
+    // 3. Manually highlight the correct button so it never crashes
+    if (tabId === 'analytics') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    } else if (tabId === 'inventory') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    }
+}
+function showToast(message, isError = false) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.className = isError ? "error show" : "success show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+}
+
+// --- ANALYTICS ---
+function fetchAnalytics(token) {
+    fetch('http://127.0.0.1:5000/api/analytics', { headers: { 'Authorization': token } })
+    .then(res => res.json())
+    .then(data => {
+        if(data.message === "Unauthorized") { localStorage.removeItem("admin_token"); location.reload(); return; }
+        
+        document.getElementById('statRevenue').innerText = '$' + data.total_revenue.toFixed(2);
+        document.getElementById('statOrders').innerText = data.total_orders;
+        document.getElementById('statUsers').innerText = data.total_users;
+
+        new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar', data: {
+                labels: data.top_books.map(b => b.name.substring(0, 15) + '...'),
+                datasets: [{ label: 'Copies Sold', data: data.top_books.map(b => b.sales), backgroundColor: '#0070ba', borderRadius: 4 }]
+            }
+        });
+
+        new Chart(document.getElementById('doughnutChart').getContext('2d'), {
+            type: 'doughnut', data: {
+                labels: data.category_sales.map(c => c.category),
+                datasets: [{ data: data.category_sales.map(c => c.sales), backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0'] }]
+            }
+        });
+    });
+}
+// --- INVENTORY LOGIC ---
+function fetchInventory() {
+    fetch('http://127.0.0.1:5000/books')
+    .then(res => res.json())
+    .then(books => {
+        const tbody = document.getElementById('inventoryTableBody');
+        tbody.innerHTML = '';
+        
+        books.forEach(b => {
+            // THE FIX: Convert the price string back into a math number!
+            const safePrice = parseFloat(b.price) || 0;
+            
             tbody.innerHTML += `
                 <tr>
-                    <td>${book.id}</td>
-                    <td>${book.name || "Unknown"}</td>
-                    <td><span style="background:#eee; padding:3px 8px; border-radius:10px; font-size:0.85rem;">${book.category || 'Uncategorized'}</span></td>
-                    <td>$${safePrice}</td>
-                    <td>${safeStock}</td>
+                    <td>#${b.id}</td>
+                    <td style="font-weight: bold;">${b.name}</td>
+                    <td>$${safePrice.toFixed(2)}</td>
+                    <td>${b.stock}</td>
                     <td>
-                        <button class="action-btn edit-btn" onclick="startEdit(${book.id}, '${safeName}', ${safePrice}, ${safeStock}, '${safeCategory}')">Edit</button>
-                        <button class="action-btn del-btn" onclick="deleteBook(${book.id})">Delete</button>
+                        <button class="action-btn edit-btn" onclick="populateEditForm(${b.id}, '${b.name.replace(/'/g, "\\'")}', ${safePrice}, ${b.stock})">✏️ Edit</button>
+                        <button class="action-btn delete-btn" onclick="deleteBook(${b.id})">🗑️ Delete</button>
                     </td>
                 </tr>
             `;
         });
     })
-    .catch(err => {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding: 20px;">❌ Error loading inventory: ${err.message}. Check your Python server terminal!</td></tr>`;
-    });
+    .catch(err => console.error("Error drawing the inventory table:", err));
 }
 
-// --- EDIT MODE LOGIC ---
-function startEdit(id, name, price, stock, category) {
-    document.getElementById('formTitle').innerText = "Edit Book #" + id;
-    document.getElementById('bookName').value = name;
-    document.getElementById('bookPrice').value = price;
-    document.getElementById('bookStock').value = stock;
-    document.getElementById('editBookId').value = id;
+// --- NEW INLINE FORM LOGIC ---
+
+// 1. Fills the top form when "Edit" is clicked in the table
+function populateEditForm(id, name, price, stock) {
+    document.getElementById('formTitle').innerText = `✏️ Editing Book #${id}`;
+    document.getElementById('editBookId').value = id; 
+    document.getElementById('editName').value = name;
+    document.getElementById('editPrice').value = price;
+    document.getElementById('editStock').value = stock;
     
-    document.getElementById('bookCategory').value = category;
-    
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Update Database";
-    btn.classList.add('update-mode');
-    
-    document.getElementById('cancelBtn').style.display = "block";
-    document.getElementById('statusMessage').innerText = "Ready to update...";
-    document.getElementById('statusMessage').style.color = "orange";
+    // Switch buttons to Edit Mode
+    document.getElementById('saveBtn').innerText = "Update Book";
+    document.getElementById('cancelBtn').style.display = "inline-block";
+
+    // Scroll up so the admin can see the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function cancelEdit() {
-    document.getElementById('formTitle').innerText = "Add New Book";
-    document.getElementById('bookName').value = '';
-    document.getElementById('bookPrice').value = '';
-    document.getElementById('bookStock').value = '';
-    document.getElementById('editBookId').value = '';
+// 2. Clears the form back to "Add New Book" mode
+function resetForm() {
+    document.getElementById('formTitle').innerText = "➕ Add New Book";
+    document.getElementById('editBookId').value = ""; 
+    document.getElementById('editName').value = "";
+    document.getElementById('editPrice').value = "";
+    document.getElementById('editStock').value = "";
     
-    document.getElementById('bookCategory').value = 'Uncategorized';
-    
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Add to Database";
-    btn.classList.remove('update-mode');
-    
+    // Switch buttons back to Add Mode
+    document.getElementById('saveBtn').innerText = "Save Book";
     document.getElementById('cancelBtn').style.display = "none";
-    document.getElementById('statusMessage').innerText = "";
 }
 
-// --- SAVE (ADD OR UPDATE) LOGIC ---
+// 3. Smart Save (POST for new, PUT for edits)
 function saveBook() {
-    const password = document.getElementById('adminPassword').value;
-    const name = document.getElementById('bookName').value;
-    const price = document.getElementById('bookPrice').value;
-    const stock = document.getElementById('bookStock').value;
-    const category = document.getElementById('bookCategory').value; 
-    const editId = document.getElementById('editBookId').value;
-    const statusBox = document.getElementById('statusMessage');
+    const token = localStorage.getItem("admin_token");
+    const id = document.getElementById('editBookId').value;
+    const name = document.getElementById('editName').value;
+    const price = document.getElementById('editPrice').value;
+    const stock = document.getElementById('editStock').value;
 
-    if(!password || !name || !price || !stock) {
-        statusBox.style.color = 'red'; statusBox.innerText = "Fill out all fields!"; return;
+    if (!name || !price || !stock) {
+        showToast("Please fill in all fields.", true);
+        return;
     }
 
-    const method = editId ? 'PUT' : 'POST';
-    const url = editId ? `http://127.0.0.1:5000/update-book/${editId}` : 'http://127.0.0.1:5000/add-book';
-
-    const bookData = { 
-        password: password, 
-        name: name, 
-        price: parseFloat(price), 
-        stock: parseInt(stock),
-        category: category 
+    const payload = {
+        name: name,
+        price: parseFloat(price),
+        stock: parseInt(stock)
     };
+
+    let url = 'http://127.0.0.1:5000/add-book';
+    let method = 'POST';
+
+    // If we have an ID, we are editing!
+    if (id) {
+        url = `http://127.0.0.1:5000/update-book/${id}`;
+        method = 'PUT';
+    }
 
     fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookData)
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify(payload)
     })
-    .then(res => res.json().then(data => ({status: res.status, body: data})))
-    .then(res => {
-        if(res.status === 200 || res.status === 201) {
-            statusBox.style.color = 'green';
-            statusBox.innerText = "✅ " + res.body.message;
-            cancelEdit(); 
-            loadInventory(); 
-        } else {
-            statusBox.style.color = 'red';
-            statusBox.innerText = "❌ " + res.body.message;
+    .then(res => res.json())
+    .then(data => {
+        const isError = data.message.includes("Failed") || data.message.includes("Unauthorized");
+        showToast(data.message, isError);
+        
+        if (!isError) {
+            resetForm(); // Clear the form
+            fetchInventory(); // Refresh the table
         }
     })
-    .catch(err => { statusBox.innerText = "Network Error."; });
+    .catch(err => showToast("Server error.", true));
 }
 
-// --- DELETE LOGIC ---
+// 4. Delete Book
 function deleteBook(id) {
-    const password = document.getElementById('adminPassword').value;
-    if(!password) {
-        alert("You must enter the Admin Password in the form to delete a book!");
-        return;
-    }
+    if (!confirm("Are you sure you want to permanently delete this book?")) return;
     
-    if(!confirm("Are you sure you want to delete Book #" + id + "?")) return;
-
+    const token = localStorage.getItem("admin_token");
     fetch(`http://127.0.0.1:5000/delete-book/${id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: password })
+        headers: { 'Authorization': token }
     })
-    .then(res => res.json().then(data => ({status: res.status, body: data})))
-    .then(res => {
-        if(res.status === 200) {
-            alert("✅ " + res.body.message);
-            loadInventory();
-        } else {
-            alert("❌ " + res.body.message); 
-        }
+    .then(res => res.json())
+    .then(data => {
+        showToast(data.message, data.message.includes("Cannot"));
+        fetchInventory(); 
     });
 }

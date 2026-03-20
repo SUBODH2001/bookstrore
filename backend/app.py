@@ -346,106 +346,136 @@ def get_my_orders():
 # 4. ADMIN INVENTORY MANAGEMENT ROUTES
 # ==========================================
 
-# --- UPDATED: Add Book (Now accepts author, synopsis, etc.) ---
-@app.route('/add-book', methods=['POST'])
-def add_book():
+# ==========================================
+# 4. ADMIN AUTH & INVENTORY ROUTES
+# ==========================================
+
+@app.route('/admin-login', methods=['POST'])
+def admin_login():
     data = request.json
-    entered_password = data.get('password')
+    username = data.get('username')
+    password = data.get('password')
     
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT password_hash FROM admin_users WHERE username = 'admin'")
-        result = cursor.fetchone()
-        if not result or not check_password_hash(result[0], entered_password):
-            return jsonify({"message": "Access Denied: Incorrect Password!"}), 401
+        cursor.execute("SELECT id, password_hash FROM admin_users WHERE username = %s", (username,))
+        admin = cursor.fetchone()
+        
+        if admin and check_password_hash(admin[1], password):
+            # Create a special Admin Session Token
+            session_token = "admin_" + str(uuid.uuid4())
+            cursor.execute("INSERT INTO admin_sessions (token, admin_id) VALUES (%s, %s)", (session_token, admin[0]))
+            connection.commit()
+            return jsonify({"message": "Admin login successful", "token": session_token}), 200
+        else:
+            return jsonify({"message": "Invalid admin credentials"}), 401
+    finally:
+        if 'connection' in locals(): connection.close()
 
-        name = data.get('name')
-        price = data.get('price')
-        stock = data.get('stock')
-        category = data.get('category', 'Uncategorized')
-        author = data.get('author', 'Unknown Author')
-        synopsis = data.get('synopsis', 'No synopsis provided.')
-        isbn = data.get('isbn', '000-0000000000')
-        year = data.get('year', 2026)
+# Helper function to check admin token
+def verify_admin(token):
+    if not token: return False
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT admin_id FROM admin_sessions WHERE token = %s", (token,))
+        result = cur.fetchone()
+        conn.close()
+        return bool(result)
+    except:
+        return False
+
+@app.route('/add-book', methods=['POST'])
+def add_book():
+    token = request.headers.get('Authorization')
+    if not verify_admin(token): return jsonify({"message": "Unauthorized Admin Access!"}), 401
+    
+    data = request.json
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
         
         cursor.execute(
             """INSERT INTO products (name, price, stock_quantity, category, author, synopsis, isbn, published_year) 
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-            (name, price, stock, category, author, synopsis, isbn, year)
+            (data.get('name'), data.get('price'), data.get('stock'), data.get('category', 'Uncategorized'), 
+             data.get('author', 'Unknown'), data.get('synopsis', ''), data.get('isbn', ''), data.get('year', 2026))
         )
         connection.commit()
-        return jsonify({"message": f"Added '{name}' to the database!"}), 201
-    except Exception as error:
+        return jsonify({"message": f"Added book to database!"}), 201
+    except Exception as e:
         if 'connection' in locals(): connection.rollback()
         return jsonify({"message": "Failed to add book."}), 500
     finally:
         if 'connection' in locals(): connection.close()
 
-# --- UPDATED: Update Book (Now accepts author, synopsis, etc.) ---
 @app.route('/update-book/<int:book_id>', methods=['PUT'])
 def update_book(book_id):
-    data = request.json
-    entered_password = data.get('password')
+    token = request.headers.get('Authorization')
+    if not verify_admin(token): return jsonify({"message": "Unauthorized Admin Access!"}), 401
     
+    data = request.json
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT password_hash FROM admin_users WHERE username = 'admin'")
-        result = cursor.fetchone()
-        if not result or not check_password_hash(result[0], entered_password):
-            return jsonify({"message": "Access Denied!"}), 401
-
-        name = data.get('name')
-        price = data.get('price')
-        stock = data.get('stock')
-        category = data.get('category', 'Uncategorized')
-        author = data.get('author', 'Unknown Author')
-        synopsis = data.get('synopsis', 'No synopsis provided.')
-        isbn = data.get('isbn', '000-0000000000')
-        year = data.get('year', 2026)
         
         cursor.execute(
-            """UPDATE products SET name = %s, price = %s, stock_quantity = %s, category = %s, 
-               author = %s, synopsis = %s, isbn = %s, published_year = %s WHERE id = %s""",
-            (name, price, stock, category, author, synopsis, isbn, year, book_id)
+            """UPDATE products SET name = %s, price = %s, stock_quantity = %s WHERE id = %s""",
+            (data.get('name'), data.get('price'), data.get('stock'), book_id)
         )
         connection.commit()
-        return jsonify({"message": f"Successfully updated '{name}'!"}), 200
-    except Exception as error:
+        return jsonify({"message": "Successfully updated book!"}), 200
+    except Exception as e:
         if 'connection' in locals(): connection.rollback()
         return jsonify({"message": "Failed to update."}), 500
     finally:
         if 'connection' in locals(): connection.close()
 
-
 @app.route('/delete-book/<int:book_id>', methods=['DELETE'])
 def delete_book(book_id):
-    data = request.json
-    entered_password = data.get('password')
+    token = request.headers.get('Authorization')
+    if not verify_admin(token): return jsonify({"message": "Unauthorized Admin Access!"}), 401
+    
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM products WHERE id = %s", (book_id,))
+        connection.commit()
+        return jsonify({"message": "Book deleted."}), 200
+    except psycopg2.IntegrityError:
+        if 'connection' in locals(): connection.rollback()
+        return jsonify({"message": "Cannot delete: Customers have already ordered this book."}), 400
+    finally:
+        if 'connection' in locals(): connection.close()
+
+@app.route('/api/analytics', methods=['GET'])
+def get_analytics():
+    token = request.headers.get('Authorization')
+    if not verify_admin(token): return jsonify({"message": "Unauthorized"}), 401
     
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        cursor.execute("SELECT password_hash FROM admin_users WHERE username = 'admin'")
-        result = cursor.fetchone()
-        if not result or not check_password_hash(result[0], entered_password):
-            return jsonify({"message": "Access Denied: Incorrect Password!"}), 401
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_orders = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_users = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COALESCE(SUM(p.price), 0) FROM orders o JOIN products p ON o.product_id = p.id")
+        total_revenue = cursor.fetchone()[0]
 
-        cursor.execute("DELETE FROM products WHERE id = %s", (book_id,))
-        connection.commit()
-        return jsonify({"message": "Book permanently deleted."}), 200
+        cursor.execute("SELECT p.name, COUNT(o.id) as sales FROM orders o JOIN products p ON o.product_id = p.id GROUP BY p.name ORDER BY sales DESC LIMIT 5")
+        top_books = [{"name": row[0], "sales": row[1]} for row in cursor.fetchall()]
 
-    except psycopg2.IntegrityError:
-        if 'connection' in locals(): connection.rollback()
-        return jsonify({"message": "Cannot delete: Customers have already ordered this book. Please update the stock to 0 instead."}), 400
-    except Exception as error:
-        if 'connection' in locals(): connection.rollback()
-        return jsonify({"message": "Server error while deleting."}), 500
+        cursor.execute("SELECT p.category, COUNT(o.id) as sales FROM orders o JOIN products p ON o.product_id = p.id GROUP BY p.category HAVING COUNT(o.id) > 0")
+        category_sales = [{"category": row[0], "sales": row[1]} for row in cursor.fetchall()]
+
+        return jsonify({"total_orders": total_orders, "total_users": total_users, "total_revenue": float(total_revenue), "top_books": top_books, "category_sales": category_sales}), 200
     finally:
         if 'connection' in locals(): connection.close()
-
 
 # ==========================================
 # 5. USER PROFILE & ACTIVITY ROUTES
@@ -626,68 +656,7 @@ def get_my_wishlist():
     finally:
         if 'connection' in locals(): connection.close()
 
-# --- NEW: Admin Analytics Dashboard Data ---
-@app.route('/api/analytics', methods=['GET'])
-def get_analytics():
-    token = request.headers.get('Authorization')
-    
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        
-        # 1. Verify Admin (Basic check for this example)
-        cursor.execute("SELECT user_id FROM sessions WHERE token = %s", (token,))
-        if not cursor.fetchone(): 
-            return jsonify({"message": "Unauthorized"}), 401
 
-        # 2. Get Summary Stats
-        cursor.execute("SELECT COUNT(*) FROM orders")
-        total_orders = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM users")
-        total_users = cursor.fetchone()[0]
-        
-        cursor.execute("""
-            SELECT COALESCE(SUM(p.price), 0) 
-            FROM orders o 
-            JOIN products p ON o.product_id = p.id
-        """)
-        total_revenue = cursor.fetchone()[0]
-
-        # 3. Get Top 5 Books (For Bar Chart)
-        cursor.execute("""
-            SELECT p.name, COUNT(o.id) as sales
-            FROM orders o
-            JOIN products p ON o.product_id = p.id
-            GROUP BY p.name
-            ORDER BY sales DESC
-            LIMIT 5
-        """)
-        top_books = [{"name": row[0], "sales": row[1]} for row in cursor.fetchall()]
-
-        # 4. Get Sales by Category (For Doughnut Chart)
-        cursor.execute("""
-            SELECT p.category, COUNT(o.id) as sales
-            FROM orders o
-            JOIN products p ON o.product_id = p.id
-            GROUP BY p.category
-            HAVING COUNT(o.id) > 0
-        """)
-        category_sales = [{"category": row[0], "sales": row[1]} for row in cursor.fetchall()]
-
-        return jsonify({
-            "total_orders": total_orders,
-            "total_users": total_users,
-            "total_revenue": float(total_revenue),
-            "top_books": top_books,
-            "category_sales": category_sales
-        }), 200
-
-    except Exception as error:
-        print("Analytics Error:", error)
-        return jsonify({"message": "Server error fetching analytics."}), 500
-    finally:
-        if 'connection' in locals(): connection.close()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
